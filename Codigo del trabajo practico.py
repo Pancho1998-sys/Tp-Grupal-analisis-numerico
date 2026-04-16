@@ -8,26 +8,48 @@ def df(x):
     return math.exp(x) - 6 * x
 
 # 2. Definimos el criterio de error esperado (4 cifras significativas)
-# es = 0.5 * 10^(2-n) %
-es = 0.5 * 10**(2-4) # Esto da 0.005 %
+# es: Tolerancia de error relativo esperado en porcentaje (%).
+#     Para n cifras significativas: es = 0.5 * 10^(2 - n) %
+#     Aquí n=4 => es = 0.005 %
+es = 0.5 * 10**(2-4)
 
 # --- a) Método de la Falsa Posición ---
 def falsa_posicion(f, xl, xu, es, max_iter=100):
+    
+   #Método de la Falsa Posición (Regula Falsi).
+   # Encuentra raíz de f(x)=0 en intervalo inicial [xl, xu] donde f(xl)*f(xu) <= 0.
+    
+   # Parámetros:
+    #- f: función a evaluar
+    #- xl: límite INFERIOR inicial del intervalo de búsqueda
+    #- xu: límite SUPERIOR inicial del intervalo de búsqueda
+    #- es: tolerancia de error relativo aproximado (%)
+    #- max_iter: número MÁXIMO de iteraciones permitidas (default: 100)
+    
+    #Retorna: (raíz aproximada, iteraciones usadas, error último %)
+
     if f(xl) * f(xu) > 0:
         return None, 0, 100 # No hay cambio de signo
     
     xr_old = xl
     for i in range(1, max_iter + 1):
-        # Fórmula de falsa posición
+        # Fórmula del método de Falsa Posición:
+        # xr = xu - [f(xu) * (xl - xu)] / [f(xl) - f(xu)]
+        # Donde:
+        # - xr: nueva aproximación a la raíz
+        # - (xl - xu): ancho del intervalo actual
+        # - f(xl), f(xu): evaluaciones en límites
         xr = xu - (f(xu) * (xl - xu)) / (f(xl) - f(xu))
         
-        # Calculamos el error relativo porcentual
+        # Error aproximado relativo porcentual:
+        # ea = | (xr - xr_old) / xr | * 100 %
+        # Donde xr_old: aproximación anterior
         if xr != 0:
             ea = abs((xr - xr_old) / xr) * 100
         else:
             ea = 100
             
-        # Reasignamos los límites
+        # Actualizar intervalo según signo de f(xl)*f(xr)
         test = f(xl) * f(xr)
         if test < 0:
             xu = xr
@@ -36,7 +58,7 @@ def falsa_posicion(f, xl, xu, es, max_iter=100):
         else:
             ea = 0 # Raíz exacta encontrada
             
-        if ea < es and i > 1: # Evaluamos el error después de la primera iteración
+        if ea < es and i > 1: # Verificar después de 1ra iteración
             return xr, i, ea
             
         xr_old = xr
@@ -44,12 +66,25 @@ def falsa_posicion(f, xl, xu, es, max_iter=100):
 
 # --- c) Método de Newton-Raphson ---
 def newton_raphson(f, df, x0, es, max_iter=100):
+
+#Método de Newton-Raphson.
+#Aproximación iterativa usando derivada.
+    
+    # - f: función
+   # - x0: valor INICIAL de aproximación (equivalente a xl o xu medio)
+   # - es: tolerancia de error relativo (%)
+   # - max_iter: máx iteraciones (default: 100)
+    
     xr_old = x0
     for i in range(1, max_iter + 1):
-        # Fórmula de Newton-Raphson
+        # Fórmula de Newton-Raphson:
+        # xr = xr_old - f(xr_old) / df(xr_old)
+        # Donde:
+        # - xr: nueva aproximación
+        # - f(xr_old)/df(xr_old): corrección basada en tangente
         xr = xr_old - f(xr_old) / df(xr_old)
         
-        # Calculamos el error relativo porcentual
+        # ea = | (xr - xr_old) / xr | * 100 %
         if xr != 0:
             ea = abs((xr - xr_old) / xr) * 100
         else:
@@ -63,11 +98,23 @@ def newton_raphson(f, df, x0, es, max_iter=100):
 
 # --- d) Método de la Secante ---
 def secante(f, x0, x1, es, max_iter=100):
+
+    #Método de la Secante (similar a falsa posición pero sin derivada).
+    
+    #Parámetros
+    #- f: función
+    #- x0: primera aproximación inicial (equivalente a xl)
+    #- x1: segunda aproximación inicial (equivalente a xu)
+    #- es: tolerancia (%)
+    #- max_iter: máx iteraciones (100)
+    # Retorna: (raíz aproximada, iteraciones usadas, error último %)
     for i in range(1, max_iter + 1):
-        # Fórmula de la secante
+        # Fórmula de la Secante:
+        # xr = x1 - [f(x1) * (x0 - x1)] / [f(x0) - f(x1)]
+        # Similar a falsa posición, pero x0/x1 se actualizan como aproximaciones
         xr = x1 - (f(x1) * (x0 - x1)) / (f(x0) - f(x1))
         
-        # Calculamos el error relativo porcentual
+        # ea = | (xr - x1) / xr | * 100 %
         if xr != 0:
             ea = abs((xr - x1) / xr) * 100
         else:
@@ -86,7 +133,7 @@ def secante(f, x0, x1, es, max_iter=100):
 
 intervalos = [(0, 1), (3, 5)]
 
-print(f"Criterio de error (es): {es}%\n")
+print(f"Criterio de error (es): {es}%\\n")
 
 for (a, b) in intervalos:
     print("-" * 50)
@@ -108,3 +155,4 @@ for (a, b) in intervalos:
     raiz_sec, iter_sec, ea_sec = secante(f, a, b, es)
     print(f"Secante        : Raíz = {raiz_sec:.6f} | Iteraciones = {iter_sec:2} | Error = {ea_sec:.6f}%")
     print()
+
